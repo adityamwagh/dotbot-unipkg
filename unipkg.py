@@ -100,7 +100,7 @@ class OsFiltering:
         self.platform = self._get_platform()
 
     def _get_platform(self) -> str:
-        return sys.platform
+        return "macos" if sys.platform == "darwin" else sys.platform
 
     def _should_filter(self, install_entry: InstallEntry) -> bool:
         return bool(install_entry.filters is not None and len(install_entry.filters) != 0)
@@ -314,7 +314,7 @@ class DnfPackageManager(PackageManager):
         super().__init__()
         self._update_command = "sudo dnf makecache"
         self._package_exists_command = "dnf list available"  # plus pkg
-        self._package_is_installed_command = "dnf list installed"  # plus pkg
+        self._package_is_installed_command = "rpm -q"  # plus pkg
         self._package_install_command = "sudo dnf install -y"  # plus pkg
 
 
