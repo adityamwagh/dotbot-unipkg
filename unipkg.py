@@ -234,6 +234,9 @@ def run_in_shell(cmd: str, *, verbose: bool = False) -> bool:
 class PackageManager(ABC):
     """package manager interface"""
 
+    def __init__(self) -> None:
+        self._cache_updated = False
+
     def package_install(self, package: str, verbose: bool = False) -> PackageStatus:
         """install a package
 
@@ -243,6 +246,11 @@ class PackageManager(ABC):
         # check if package is installed (always quiet)
         if self.package_is_installed(package, verbose=False):
             return PackageStatus.ALREADY_INSTALLED
+
+        # refresh the cache once before the first real install; fresh systems
+        # (e.g. containers with stripped package lists) have no metadata yet
+        if not self._cache_updated:
+            self.update(verbose=False)
 
         # check if package exists in repos (always quiet)
         if not self.package_exists(package, verbose=False):
@@ -255,6 +263,7 @@ class PackageManager(ABC):
     def update(self, verbose: bool = False) -> None:
         """update the caches"""
         run_in_shell(self._update_command, verbose=verbose)
+        self._cache_updated = True
 
     def package_exists(self, package: str, verbose: bool = False) -> bool:
         """check if the package exists in the remote
