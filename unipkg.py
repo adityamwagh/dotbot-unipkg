@@ -329,11 +329,11 @@ class ZypperPackageManager(PackageManager):
 
 class PackageManagerFactory:
     pms = (
-        {"executable": "brew", "pm": BrewPackageManager},
         {"executable": "apt-get", "pm": AptPackageManager},
         {"executable": "pacman", "pm": PacmanPackageManager},
         {"executable": "dnf", "pm": DnfPackageManager},
         {"executable": "zypper", "pm": ZypperPackageManager},
+        {"executable": "brew", "pm": BrewPackageManager},
     )
 
     def spawn(self) -> PackageManager:
