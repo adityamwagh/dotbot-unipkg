@@ -48,6 +48,7 @@ UNIPKGPLUGIN="${BASEDIR}/dotbot-plugins/dotbot-unipkg/unipkg.py"
 
 The plugin introduces the `unipkg` directive. It supports several configuration options:
 
+- `if`: Runs a shell command; the whole block is skipped when it exits non-zero.
 - `update`: Updates the package manager's local cache.
 - `verbose`: Enables verbose output for package manager commands.
 - `install`: A list of packages to ensure are installed.
@@ -63,6 +64,20 @@ The plugin introduces the `unipkg` directive. It supports several configuration 
       - ripgrep
       - lsd
       - zoxide
+```
+
+### Conditional Blocks
+
+Use `if` to gate an entire `unipkg` block behind a shell condition. The block is
+skipped when the command exits non-zero (same semantics as dotbot's built-in
+`link` directive).
+
+```yaml
+- unipkg:
+    if: '[ -n "$DOTFILES_SERVER" ]'
+    install:
+      - neovim
+      - ripgrep
 ```
 
 ### Advanced Configuration

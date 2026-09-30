@@ -9,6 +9,7 @@ from shutil import which
 from typing import ClassVar
 
 import dotbot
+from dotbot.util import shell_command
 
 plugin_name = "Unipkg"
 
@@ -42,6 +43,10 @@ class UniPkg(dotbot.Plugin):
 
     def handle(self, directive, data) -> bool:  # noqa: ANN001, ARG002
         directives = self.parser.parse(data)
+
+        if directives.condition is not None and not self._test_success(directives.condition):
+            self._log_info(f"Skipping unipkg block: condition '{directives.condition}' failed")
+            return True
 
         if directives.update is True:
             self._log_info("Updating repos ...")
@@ -92,6 +97,9 @@ class UniPkg(dotbot.Plugin):
         self._log_info("done")
         return True
 
+    def _test_success(self, command: str) -> bool:
+        return shell_command(command, cwd=self._context.base_directory()) == 0
+
 
 class OsFiltering:
     supported_os: ClassVar[list[str]] = ["linux", "macos"]
@@ -119,9 +127,11 @@ class OsFiltering:
 class Directives:
     """Holds all parsed directives from the configuration."""
 
-    update: bool = False
-    verbose: bool = False
-    install_entries: list[InstallEntry] = []  # noqa: RUF012
+    def __init__(self) -> None:
+        self.update: bool = False
+        self.verbose: bool = False
+        self.condition: str | None = None
+        self.install_entries: list[InstallEntry] = []
 
 
 class InstallEntry:
@@ -197,9 +207,17 @@ class DirectivesParser:
 
         return parsed_entries
 
-    def parse(self, data: list) -> Directives:
-        """The main entry point for parsing the configuration list."""
+    def parse(self, data) -> Directives:  # noqa: ANN001
+        """The main entry point for parsing the configuration.
+
+        ``data`` is normally a list of sub-directives, but may also be a dict
+        carrying a block-level ``if:`` condition alongside the same keys.
+        """
         directives = Directives()
+
+        if isinstance(data, dict):
+            directives.condition = data.get("if")
+            data = [data]
 
         for item in data:
             if isinstance(item, str) and item == self._updateSubDirective:
